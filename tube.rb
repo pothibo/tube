@@ -18,6 +18,10 @@ class Tube
   end
 
   class Connection
+    REASONS = {
+      200 => "OK"
+    }.freeze
+
     def initialize(socket, app)
       @socket = socket
       @app = app
@@ -51,11 +55,13 @@ class Tube
     
     def send_response(env)
       status, headers, body = @app.call(env)
-      @socket.write "HTTP/1.1 #{status} OK\r\n"
+      reason = REASONS[status]
+      @socket.write "HTTP/1.1 #{status} #{reason}"
+      @socket.write carriage_return
 
       headers.each_pair do |name, value|
         @socket.write "#{name.to_s}: #{value.to_s}"
-        @socket.write "\r\n"
+        @socket.write carriage_return
       end
 
       @socket.write carriage_return
@@ -63,6 +69,8 @@ class Tube
       body.each do |content|
         @socket.write content.to_s
       end.join
+
+      body.close if body.responds_to? :close
 
       @socket.write carriage_return
 
