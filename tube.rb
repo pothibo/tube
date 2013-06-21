@@ -70,7 +70,7 @@ class Tube
         @socket.write content.to_s
       end.join
 
-      body.close if body.responds_to? :close
+      body.close if body.respond_to? :close
 
       @socket.write carriage_return
 
